@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
+import android.view.View
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -26,7 +27,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var adapter: ClosedIssueRVAdapter
     private lateinit var issueList: ArrayList<ClosedIssueModel>
-    private lateinit var tempArraylist : ArrayList<ClosedIssueModel>
+    private lateinit var tempArraylist: ArrayList<ClosedIssueModel>
     private var currentPage = 1
     private val itemsPerPage = 20
 
@@ -73,8 +74,6 @@ class MainActivity : AppCompatActivity() {
         searchView.setOnQueryTextListener(object :
             androidx.appcompat.widget.SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-               // code to search
-
 
                 return false
             }
@@ -82,15 +81,26 @@ class MainActivity : AppCompatActivity() {
             override fun onQueryTextChange(newText: String?): Boolean {
                 tempArraylist.clear()
                 val searchText = newText!!.toLowerCase(Locale.getDefault())
+                adapter.searchQuery = searchText
+
                 if (searchText.isNotEmpty()) {
-                    tempArraylist.addAll(issueList.filter {
+                    val searchResults = issueList.filter {
                         it.title.toLowerCase(Locale.getDefault()).contains(searchText)
-                    })
+                    }
+                    tempArraylist.addAll(searchResults)
+
+                    if (tempArraylist.isEmpty()) {
+                        // Show a message indicating that no results were found
+                        binding.username.visibility = View.VISIBLE
+                    } else {
+                        binding.username.visibility = View.GONE
+                    }
                 } else {
                     tempArraylist.addAll(issueList)
+                    binding.username.visibility = View.GONE
                 }
 
-                binding.CloseIssueListRV.adapter?.notifyDataSetChanged()
+                adapter.notifyDataSetChanged()
                 return false
             }
 
@@ -100,56 +110,63 @@ class MainActivity : AppCompatActivity() {
         return super.onCreateOptionsMenu(menu)
     }
 
-private fun getIssues() {
-    val apiService = RetrofitObject().apiService
-    val call: Call<List<myData.myDataItem>> = apiService.getIssuesData(currentPage, itemsPerPage)
+    private fun getIssues() {
+        val apiService = RetrofitObject().apiService
+        val call: Call<List<myData.myDataItem>> =
+            apiService.getIssuesData(currentPage, itemsPerPage)
 
-    call.enqueue(object : Callback<List<myData.myDataItem>?> {
-        override fun onResponse(
-            call: Call<List<myData.myDataItem>?>,
-            response: Response<List<myData.myDataItem>?>
-        ) {
+        call.enqueue(object : Callback<List<myData.myDataItem>?> {
+            override fun onResponse(
+                call: Call<List<myData.myDataItem>?>,
+                response: Response<List<myData.myDataItem>?>
+            ) {
+                if (response.isSuccessful) {
+                    binding.progressBar.visibility = android.view.View.GONE
+                    binding.CloseIssueListRV.visibility = android.view.View.VISIBLE
 
-            if (response.isSuccessful) {
-                binding.progressBar.visibility = android.view.View.GONE
-                binding.CloseIssueListRV.visibility = android.view.View.VISIBLE
-                val issuesDataModel: List<myData.myDataItem>? = response.body()
-                if (issuesDataModel != null) {
+                    val issuesDataModel: List<myData.myDataItem>? = response.body()
+                    if (issuesDataModel != null) {
+                        Log.d("API_RESPONSE", "Number of items received: ${issuesDataModel.size}")
 
-                    Log.d("API_RESPONSE", "Number of items received: ${issuesDataModel.size}")
-                    for (i in issuesDataModel) {
-                        val userName = i.user.login
-                        val userImage = i.user.avatarUrl
+                        // Clear issueList only when it's the first page
+                        if (currentPage == 1) {
+                            issueList.clear()
+                        }
 
-                        val createdAt = formatDate(i.createdAt)
-                        val closedAt = formatDate(i.closedAt)
+                        for (i in issuesDataModel) {
+                            val userName = i.user.login
+                            val userImage = i.user.avatarUrl
 
-                        val closedIssueModel = ClosedIssueModel(
-                            i.title,
-                            createdAt,
-                            closedAt,
-                            userName,
-                            userImage
-                        )
-                        issueList.add(closedIssueModel)
+                            val createdAt = formatDate(i.createdAt)
+                            val closedAt = formatDate(i.closedAt)
+
+                            val closedIssueModel = ClosedIssueModel(
+                                i.title,
+                                createdAt,
+                                closedAt,
+                                userName,
+                                userImage
+                            )
+                            issueList.add(closedIssueModel)
+                        }
+
+                        tempArraylist.clear()
+                        tempArraylist.addAll(issueList)
+
+                        adapter.notifyDataSetChanged()
+                        Log.d("MainActivity", "Current Page: $currentPage")
+                        currentPage++
                     }
-                    tempArraylist.addAll(issueList)
-
-
-                    adapter.notifyDataSetChanged()
-                    Log.d("MainActivity", "Current Page: $currentPage")
-                    currentPage++
+                } else {
+                    Toast.makeText(this@MainActivity, "Error", Toast.LENGTH_SHORT).show()
                 }
-            } else {
-                Toast.makeText(this@MainActivity, "Error", Toast.LENGTH_SHORT).show()
             }
-        }
 
-        override fun onFailure(call: Call<List<myData.myDataItem>?>, t: Throwable) {
-            Toast.makeText(this@MainActivity, "Failed to fetch data", Toast.LENGTH_SHORT).show()
-        }
-    })
-}
+            override fun onFailure(call: Call<List<myData.myDataItem>?>, t: Throwable) {
+                Toast.makeText(this@MainActivity, "Failed to fetch data", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
 
 
     private fun formatDate(inputDate: String?): String {

@@ -10,7 +10,11 @@ class RetrofitObject {
 
     companion object {
         private const val BASE_URL = "https://api.github.com"
+
+        private const val TOKEN = "${"TOKEN"}"
+
         private const val TOKEN = "${KEY}"
+
     }
 
     private val client: OkHttpClient = OkHttpClient.Builder().apply {

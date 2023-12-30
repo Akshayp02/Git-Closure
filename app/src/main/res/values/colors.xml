@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="backgroundColor">#0f0e17</color>
+    <color name="HeadlineColor">#fffffe</color>
+    <color name="ParaColor">#a7a9be</color>
+    <color name="ButtonColor">#ff8906</color>
+    <color name="BTNTextColor">#fffffe</color>
+
+</resources>

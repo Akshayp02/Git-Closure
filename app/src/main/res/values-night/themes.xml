@@ -1,0 +1,11 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.GitClosure" parent="Theme.Material3.DayNight">
+        <!-- Customize your dark theme here. -->
+        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+        <item name="colorPrimary">@color/backgroundColor</item>
+        <!-- Customize the status bar color (optional) -->
+        <item name="colorPrimaryDark">@color/backgroundColor</item>
+        <item name="android:statusBarColor">@color/backgroundColor</item>
+    </style>
+</resources>

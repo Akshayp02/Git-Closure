@@ -18,11 +18,6 @@ interface ApiService {
         @Query("per_page") perPage: Int
     ): Call<List<myData.myDataItem>>
 
-    @GET("search/issues?state=closed&per_page=$PER_PAGE")
-    fun getSearchData(
-        @Query("q") q: String,
-        @Query("page") page: Int,
-        @Query("per_page") perPage: Int
-    ): Call<List<myData.myDataItem>>
+
 
 }
